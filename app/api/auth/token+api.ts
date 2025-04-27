@@ -4,13 +4,10 @@ import {
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URI,
   COOKIE_NAME,
-  REFRESH_COOKIE_NAME,
   COOKIE_MAX_AGE,
   JWT_EXPIRATION_TIME,
   JWT_SECRET,
   COOKIE_OPTIONS,
-  REFRESH_TOKEN_EXPIRY,
-  REFRESH_COOKIE_OPTIONS,
 } from "@/constants";
 
 export async function POST(request: Request) {
@@ -57,33 +54,11 @@ export async function POST(request: Request) {
   // Current timestamp in seconds
   const issuedAt = Math.floor(Date.now() / 1000);
 
-  // Generate a unique jti (JWT ID) for the refresh token
-  const jti = crypto.randomUUID();
-
   // Create access token (short-lived)
   const accessToken = await new jose.SignJWT(userInfoWithoutExp)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(JWT_EXPIRATION_TIME)
     .setSubject(sub)
-    .setIssuedAt(issuedAt)
-    .sign(new TextEncoder().encode(JWT_SECRET));
-
-  // Create refresh token (long-lived)
-  const refreshToken = await new jose.SignJWT({
-    sub,
-    jti, // Include a unique ID for this refresh token
-    type: "refresh",
-    // Include all user information in the refresh token
-    // This ensures we have the data when refreshing tokens
-    name: (userInfo as any).name,
-    email: (userInfo as any).email,
-    picture: (userInfo as any).picture,
-    given_name: (userInfo as any).given_name,
-    family_name: (userInfo as any).family_name,
-    email_verified: (userInfo as any).email_verified,
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(REFRESH_TOKEN_EXPIRY)
     .setIssuedAt(issuedAt)
     .sign(new TextEncoder().encode(JWT_SECRET));
 
@@ -127,6 +102,5 @@ export async function POST(request: Request) {
   // For native platforms, return both tokens in the response body
   return Response.json({
     access_token: accessToken,
-    refreshToken,
   });
 }
