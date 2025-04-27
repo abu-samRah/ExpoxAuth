@@ -62,7 +62,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const handleResponse = async () => {
       if (response?.type === "success") {
         const { code } = response.params;
-        console.log("code", { code });
         try {
           setIsLoading(true);
 
@@ -76,8 +75,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (isWeb) {
             formData.append("platform", "web");
           }
-
-          console.log("request", request);
 
           // Get the code verifier from the request object
           // This is the same verifier that was used to generate the code challenge

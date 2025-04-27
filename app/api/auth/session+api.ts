@@ -3,7 +3,6 @@ import { COOKIE_NAME, JWT_SECRET } from "@/constants";
 
 export async function GET(request: Request) {
   try {
-    console.log("iam web 33 ", { request: request.headers });
     // Get the cookie from the request
     const cookieHeader = request.headers.get("cookie");
     if (!cookieHeader) {
