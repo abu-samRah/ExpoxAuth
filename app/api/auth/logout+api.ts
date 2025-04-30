@@ -1,4 +1,4 @@
-import { COOKIE_NAME, COOKIE_OPTIONS } from "@/constants";
+import { COOKIE_NAME, COOKIE_OPTIONS } from '@/constants';
 
 export async function POST(request: Request) {
   try {
@@ -7,17 +7,15 @@ export async function POST(request: Request) {
 
     // Clear the access token cookie
     response.headers.set(
-      "Set-Cookie",
+      'Set-Cookie',
       `${COOKIE_NAME}=; Max-Age=0; Path=${COOKIE_OPTIONS.path}; ${
-        COOKIE_OPTIONS.httpOnly ? "HttpOnly;" : ""
-      } ${COOKIE_OPTIONS.secure ? "Secure;" : ""} SameSite=${
-        COOKIE_OPTIONS.sameSite
-      }`
+        COOKIE_OPTIONS.httpOnly ? 'HttpOnly;' : ''
+      } ${COOKIE_OPTIONS.secure ? 'Secure;' : ''} SameSite=${COOKIE_OPTIONS.sameSite}`,
     );
 
     return response;
   } catch (error) {
-    console.error("Logout error:", error);
-    return Response.json({ error: "Server error" }, { status: 500 });
+    console.error('Logout error:', error);
+    return Response.json({ error: 'Server error' }, { status: 500 });
   }
 }

@@ -1,143 +1,128 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import * as WebBrowser from "expo-web-browser";
-import {
-  AuthError,
-  AuthRequestConfig,
-  DiscoveryDocument,
-  makeRedirectUri,
-  useAuthRequest,
-  exchangeCodeAsync,
-} from "expo-auth-session";
-import { BASE_URL, TOKEN_KEY_NAME } from "../constants";
-import { Platform } from "react-native";
-import * as jose from "jose";
-import { tokenCache } from "@/utils/cache";
+import React, {
+  createContext,
+  FC,
+  useEffect,
+  useState,
+  PropsWithChildren,
+  useCallback,
+} from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import { AuthError, useAuthRequest } from 'expo-auth-session';
+import { BASE_URL, TOKEN_KEY_NAME, authRequestConfig, authDiscovery } from '../constants';
+import { Platform } from 'react-native';
+import * as jose from 'jose';
+import { tokenCache } from '@/utils/cache';
+import { AuthUser } from '@/types/user';
 
 WebBrowser.maybeCompleteAuthSession();
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  name: string;
-  picture?: string;
-  given_name?: string;
-  family_name?: string;
-  email_verified?: boolean;
-  provider?: string;
-  exp?: number;
-  cookieExpiration?: number; // Added for web cookie expiration tracking
+type AuthState = {
+  user: AuthUser | null;
+  signIn: () => void;
+  signOut: () => void;
+  fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>;
+  isLoading: boolean;
+  error: AuthError | null;
 };
 
-const config: AuthRequestConfig = {
-  clientId: "google",
-  scopes: ["openid", "profile", "email"],
-  redirectUri: makeRedirectUri(),
-};
-
-const discovery: DiscoveryDocument = {
-  authorizationEndpoint: `${BASE_URL}/api/auth/authorize`,
-  tokenEndpoint: `${BASE_URL}/api/auth/token`,
-};
-export const AuthContext = createContext({
+const initialState: AuthState = {
   user: null as AuthUser | null,
   signIn: () => {},
   signOut: () => {},
-  fetchWithAuth: (url: string, options: RequestInit) =>
-    Promise.resolve(new Response()),
+  fetchWithAuth: (url: string, options: RequestInit) => Promise.resolve(new Response()),
   isLoading: false,
   error: null as AuthError | null,
-});
+};
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthContext = createContext(initialState);
+
+export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
 
-  const [request, response, promptAsync] = useAuthRequest(config, discovery);
+  const [request, response, promptAsync] = useAuthRequest(authRequestConfig, authDiscovery);
 
-  const isWeb = Platform.OS === "web";
+  const isWeb = Platform.OS === 'web';
+
+  const handleResponse = useCallback(async () => {
+    if (response?.type === 'success') {
+      const { code } = response.params;
+      try {
+        setIsLoading(true);
+
+        // Create form data to send to our token endpoint
+        // We include both the code and platform information
+        // The platform info helps our server handle web vs native differently
+        const formData = new FormData();
+        formData.append('code', code);
+
+        // Add platform information for the backend to handle appropriately
+        if (isWeb) {
+          formData.append('platform', 'web');
+        }
+
+        // Get the code verifier from the request object
+        // This is the same verifier that was used to generate the code challenge
+        if (request?.codeVerifier) {
+          formData.append('code_verifier', request.codeVerifier);
+        } else {
+          console.warn('No code verifier found in request object');
+        }
+
+        // Send the authorization code to our token endpoint
+        // The server will exchange this code with Google for access and refresh tokens
+        // For web: credentials are included to handle cookies
+        // For native: we'll receive the tokens directly in the response
+        const tokenResponse = await fetch(`${BASE_URL}/api/auth/token`, {
+          method: 'POST',
+          body: formData,
+          credentials: isWeb ? 'include' : 'same-origin', // Include cookies for web
+        });
+
+        if (isWeb) {
+          const userData = await tokenResponse.json();
+
+          if (userData.success) {
+            // Fetch the session to get user data
+            // This ensures we have the most up-to-date user information
+            const sessionResponse = await fetch(`${BASE_URL}/api/auth/session`, {
+              method: 'GET',
+              credentials: 'include',
+            });
+
+            if (sessionResponse.ok) {
+              const sessionData = await sessionResponse.json();
+              setUser(sessionData as AuthUser);
+            }
+          }
+        } else {
+          const accessTokenResponse = await tokenResponse.json();
+
+          const accessToken = accessTokenResponse.access_token;
+
+          setAccessToken(accessToken);
+
+          const decodedUser = jose.decodeJwt(accessToken);
+          setUser(decodedUser as AuthUser);
+
+          // Store access token in secure storage
+          tokenCache?.saveToken(TOKEN_KEY_NAME, accessToken);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (response?.type === 'error') {
+      setError(response.error as AuthError);
+    }
+  }, [isWeb, request?.codeVerifier, response]);
 
   useEffect(() => {
-    const handleResponse = async () => {
-      if (response?.type === "success") {
-        const { code } = response.params;
-        try {
-          setIsLoading(true);
-
-          // Create form data to send to our token endpoint
-          // We include both the code and platform information
-          // The platform info helps our server handle web vs native differently
-          const formData = new FormData();
-          formData.append("code", code);
-
-          // Add platform information for the backend to handle appropriately
-          if (isWeb) {
-            formData.append("platform", "web");
-          }
-
-          // Get the code verifier from the request object
-          // This is the same verifier that was used to generate the code challenge
-          if (request?.codeVerifier) {
-            formData.append("code_verifier", request.codeVerifier);
-          } else {
-            console.warn("No code verifier found in request object");
-          }
-
-          // Send the authorization code to our token endpoint
-          // The server will exchange this code with Google for access and refresh tokens
-          // For web: credentials are included to handle cookies
-          // For native: we'll receive the tokens directly in the response
-          const tokenResponse = await fetch(`${BASE_URL}/api/auth/token`, {
-            method: "POST",
-            body: formData,
-            credentials: isWeb ? "include" : "same-origin", // Include cookies for web
-          });
-
-          if (isWeb) {
-            const userData = await tokenResponse.json();
-
-            if (userData.success) {
-              // Fetch the session to get user data
-              // This ensures we have the most up-to-date user information
-              const sessionResponse = await fetch(
-                `${BASE_URL}/api/auth/session`,
-                {
-                  method: "GET",
-                  credentials: "include",
-                }
-              );
-
-              if (sessionResponse.ok) {
-                const sessionData = await sessionResponse.json();
-                setUser(sessionData as AuthUser);
-              }
-            }
-          } else {
-            const accessTokenResponse = await tokenResponse.json();
-
-            const accessToken = accessTokenResponse.access_token;
-
-            setAccessToken(accessToken);
-
-            const decodedUser = jose.decodeJwt(accessToken);
-            setUser(decodedUser as AuthUser);
-
-            // Store access token in secure storage
-            tokenCache?.saveToken(TOKEN_KEY_NAME, accessToken);
-          }
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setIsLoading(false);
-        }
-      } else if (response?.type === "error") {
-        setError(response.error as AuthError);
-      }
-    };
-
     handleResponse();
-  }, [response]);
+  }, [handleResponse]);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -145,8 +130,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         if (isWeb) {
           const sessionResponse = await fetch(`${BASE_URL}/api/auth/session`, {
-            method: "GET",
-            credentials: "include",
+            method: 'GET',
+            credentials: 'include',
           });
 
           if (sessionResponse.ok) {
@@ -185,7 +170,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async () => {
     try {
       if (!request) {
-        console.error("No request found");
+        console.error('No request found');
         return;
       }
       await promptAsync();
@@ -199,15 +184,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // For web: Call logout endpoint to clear the cookie
       try {
         await fetch(`${BASE_URL}/api/auth/logout`, {
-          method: "POST",
-          credentials: "include",
+          method: 'POST',
+          credentials: 'include',
         });
       } catch (error) {
-        console.error("Error during web logout:", error);
+        console.error('Error during web logout:', error);
       }
     } else {
       // For native: Clear both tokens from cache
-      await tokenCache?.deleteToken("accessToken");
+      await tokenCache?.deleteToken('accessToken');
     }
 
     // Clear state
@@ -217,7 +202,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchWithAuth = (url: string, options: RequestInit) => {
     if (isWeb) {
-      return fetch(url, { ...options, credentials: "include" });
+      return fetch(url, { ...options, credentials: 'include' });
     }
     return fetch(url, {
       ...options,
@@ -234,17 +219,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         fetchWithAuth,
         isLoading,
         error,
-      }}
-    >
+      }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };

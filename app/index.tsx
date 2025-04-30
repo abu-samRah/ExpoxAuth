@@ -1,8 +1,8 @@
-import { ActivityIndicator, Button, Text, View } from "react-native";
-import { useAuth } from "@/context/auth";
-import LoginForm from "./components/LoginForm";
-import { BASE_URL } from "@/constants";
-import { useState } from "react";
+import { ActivityIndicator, Button, Text, View } from 'react-native';
+import { useAuth } from '@/hooks/useAuth';
+import LoginForm from './components/LoginForm';
+import { BASE_URL } from '@/constants';
+import { useState } from 'react';
 
 export default function Index() {
   const { user, isLoading, signOut, fetchWithAuth } = useAuth();
@@ -12,10 +12,9 @@ export default function Index() {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -29,10 +28,9 @@ export default function Index() {
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
       <Text>{JSON.stringify(user, null, 2)}</Text>
 
       <Button title="Sign out" onPress={signOut} />
@@ -41,7 +39,7 @@ export default function Index() {
         title="Fetch data"
         onPress={async () => {
           const res = await fetchWithAuth(`${BASE_URL}/api/protected/data`, {
-            method: "GET",
+            method: 'GET',
           });
           setData(await res.json());
         }}

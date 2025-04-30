@@ -1,4 +1,4 @@
-import * as jose from "jose";
+import * as jose from 'jose';
 import {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
@@ -8,28 +8,25 @@ import {
   JWT_EXPIRATION_TIME,
   JWT_SECRET,
   COOKIE_OPTIONS,
-} from "@/constants";
+} from '@/constants';
 
 export async function POST(request: Request) {
   const body = await request.formData();
-  const code = body.get("code") as string;
-  const platform = (body.get("platform") as string) || "native"; // Default to native if not specified
+  const code = body.get('code') as string;
+  const platform = (body.get('platform') as string) || 'native'; // Default to native if not specified
 
   if (!code) {
-    return Response.json(
-      { error: "Missing authorization code" },
-      { status: 400 }
-    );
+    return Response.json({ error: 'Missing authorization code' }, { status: 400 });
   }
 
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       redirect_uri: GOOGLE_REDIRECT_URI,
-      grant_type: "authorization_code",
+      grant_type: 'authorization_code',
       code: code,
     }),
   });
@@ -37,10 +34,7 @@ export async function POST(request: Request) {
   const data = await response.json();
 
   if (!data.id_token) {
-    return Response.json(
-      { error: "Missing required parameters" },
-      { status: 400 }
-    );
+    return Response.json({ error: 'Missing required parameters' }, { status: 400 });
   }
 
   const userInfo = jose.decodeJwt(data.id_token) as object;
@@ -56,7 +50,7 @@ export async function POST(request: Request) {
 
   // Create access token (short-lived)
   const accessToken = await new jose.SignJWT(userInfoWithoutExp)
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime(JWT_EXPIRATION_TIME)
     .setSubject(sub)
     .setIssuedAt(issuedAt)
@@ -72,12 +66,12 @@ export async function POST(request: Request) {
       },
       {
         status: 400,
-      }
+      },
     );
   }
 
   // Handle web platform with cookies
-  if (platform === "web") {
+  if (platform === 'web') {
     // Create a response with the token in the body
     const response = Response.json({
       success: true,
@@ -88,12 +82,10 @@ export async function POST(request: Request) {
     // Set the access token in an HTTP-only cookie
     // Update the code that sets the cookie to ensure Secure isn't added
     response.headers.set(
-      "Set-Cookie",
+      'Set-Cookie',
       `${COOKIE_NAME}=${accessToken}; Max-Age=${COOKIE_OPTIONS.maxAge}; Path=${
         COOKIE_OPTIONS.path
-      }${COOKIE_OPTIONS.httpOnly ? "; HttpOnly" : ""}; SameSite=${
-        COOKIE_OPTIONS.sameSite
-      }`
+      }${COOKIE_OPTIONS.httpOnly ? '; HttpOnly' : ''}; SameSite=${COOKIE_OPTIONS.sameSite}`,
     );
 
     return response;

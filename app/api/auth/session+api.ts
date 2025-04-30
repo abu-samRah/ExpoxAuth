@@ -1,23 +1,23 @@
-import * as jose from "jose";
-import { COOKIE_NAME, JWT_SECRET } from "@/constants";
+import * as jose from 'jose';
+import { COOKIE_NAME, JWT_SECRET } from '@/constants';
 
 export async function GET(request: Request) {
   try {
     // Get the cookie from the request
-    const cookieHeader = request.headers.get("cookie");
+    const cookieHeader = request.headers.get('cookie');
     if (!cookieHeader) {
-      return Response.json({ error: "Not authenticated" }, { status: 401 });
+      return Response.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     // Parse cookies and their attributes
     const cookies: Record<string, Record<string, string>> = {};
 
-    cookieHeader.split(";").forEach((cookie) => {
+    cookieHeader.split(';').forEach((cookie) => {
       const trimmedCookie = cookie.trim();
 
       // Check if this is a cookie-value pair or an attribute
-      if (trimmedCookie.includes("=")) {
-        const [key, value] = trimmedCookie.split("=");
+      if (trimmedCookie.includes('=')) {
+        const [key, value] = trimmedCookie.split('=');
         const cookieName = key.trim();
 
         // Initialize the cookie entry if it doesn't exist
@@ -26,19 +26,19 @@ export async function GET(request: Request) {
         } else {
           cookies[cookieName].value = value;
         }
-      } else if (trimmedCookie.toLowerCase() === "httponly") {
+      } else if (trimmedCookie.toLowerCase() === 'httponly') {
         // Handle HttpOnly attribute
         const lastCookieName = Object.keys(cookies).pop();
         if (lastCookieName) {
-          cookies[lastCookieName].httpOnly = "true";
+          cookies[lastCookieName].httpOnly = 'true';
         }
-      } else if (trimmedCookie.toLowerCase().startsWith("expires=")) {
+      } else if (trimmedCookie.toLowerCase().startsWith('expires=')) {
         // Handle Expires attribute
         const lastCookieName = Object.keys(cookies).pop();
         if (lastCookieName) {
           cookies[lastCookieName].expires = trimmedCookie.substring(8);
         }
-      } else if (trimmedCookie.toLowerCase().startsWith("max-age=")) {
+      } else if (trimmedCookie.toLowerCase().startsWith('max-age=')) {
         // Handle Max-Age attribute
         const lastCookieName = Object.keys(cookies).pop();
         if (lastCookieName) {
@@ -49,17 +49,14 @@ export async function GET(request: Request) {
 
     // Get the auth token from cookies
     if (!cookies[COOKIE_NAME] || !cookies[COOKIE_NAME].value) {
-      return Response.json({ error: "Not authenticated" }, { status: 401 });
+      return Response.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const token = cookies[COOKIE_NAME].value;
 
     try {
       // Verify the token
-      const verified = await jose.jwtVerify(
-        token,
-        new TextEncoder().encode(JWT_SECRET)
-      );
+      const verified = await jose.jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
 
       // Calculate cookie expiration time
       let cookieExpiration: number | null = null;
@@ -70,8 +67,7 @@ export async function GET(request: Request) {
         // Calculate when the cookie will expire based on Max-Age
         // We don't know exactly when it was set, but we can estimate
         // using the token's iat (issued at) claim if available
-        const issuedAt =
-          (verified.payload.iat as number) || Math.floor(Date.now() / 1000);
+        const issuedAt = (verified.payload.iat as number) || Math.floor(Date.now() / 1000);
         cookieExpiration = issuedAt + maxAge;
       }
 
@@ -82,10 +78,10 @@ export async function GET(request: Request) {
       });
     } catch (error) {
       // Token is invalid or expired
-      return Response.json({ error: "Invalid token" }, { status: 401 });
+      return Response.json({ error: 'Invalid token' }, { status: 401 });
     }
   } catch (error) {
-    console.error("Session error:", error);
-    return Response.json({ error: "Server error" }, { status: 500 });
+    console.error('Session error:', error);
+    return Response.json({ error: 'Server error' }, { status: 500 });
   }
 }
