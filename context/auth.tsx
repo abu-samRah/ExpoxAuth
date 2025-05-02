@@ -13,7 +13,11 @@ import { Platform } from 'react-native';
 import * as jose from 'jose';
 import { tokenCache } from '@/utils/cache';
 import { AuthUser } from '@/types/user';
+import { handleWebTokenResponse } from '@/utils/handleWebTokenResponse';
+import { useTokenResponse } from '@/hooks/useTokenResponse';
+import { handleNativeTokenResponse } from '@/utils/handleNativeTokenResponse';
 
+// Complete any pending auth sessions
 WebBrowser.maybeCompleteAuthSession();
 
 type AuthState = {
@@ -29,7 +33,7 @@ const initialState: AuthState = {
   user: null as AuthUser | null,
   signIn: () => {},
   signOut: () => {},
-  fetchWithAuth: (url: string, options: RequestInit) => Promise.resolve(new Response()),
+  fetchWithAuth: (_: string, __: RequestInit) => Promise.resolve(new Response()),
   isLoading: false,
   error: null as AuthError | null,
 };
@@ -46,83 +50,54 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const isWeb = Platform.OS === 'web';
 
-  const handleResponse = useCallback(async () => {
-    if (response?.type === 'success') {
-      const { code } = response.params;
-      try {
-        setIsLoading(true);
+  const { code } = response?.type === 'success' ? response.params : { code: '' };
 
-        // Create form data to send to our token endpoint
-        // We include both the code and platform information
-        // The platform info helps our server handle web vs native differently
-        const formData = new FormData();
-        formData.append('code', code);
+  const getTokenResponse = useTokenResponse(code, isWeb, request);
 
-        // Add platform information for the backend to handle appropriately
-        if (isWeb) {
-          formData.append('platform', 'web');
-        }
-
-        // Get the code verifier from the request object
-        // This is the same verifier that was used to generate the code challenge
-        if (request?.codeVerifier) {
-          formData.append('code_verifier', request.codeVerifier);
-        } else {
-          console.warn('No code verifier found in request object');
-        }
-
-        // Send the authorization code to our token endpoint
-        // The server will exchange this code with Google for access and refresh tokens
-        // For web: credentials are included to handle cookies
-        // For native: we'll receive the tokens directly in the response
-        const tokenResponse = await fetch(`${BASE_URL}/api/auth/token`, {
-          method: 'POST',
-          body: formData,
-          credentials: isWeb ? 'include' : 'same-origin', // Include cookies for web
-        });
-
-        if (isWeb) {
-          const userData = await tokenResponse.json();
-
-          if (userData.success) {
-            // Fetch the session to get user data
-            // This ensures we have the most up-to-date user information
-            const sessionResponse = await fetch(`${BASE_URL}/api/auth/session`, {
-              method: 'GET',
-              credentials: 'include',
-            });
-
-            if (sessionResponse.ok) {
-              const sessionData = await sessionResponse.json();
-              setUser(sessionData as AuthUser);
-            }
-          }
-        } else {
-          const accessTokenResponse = await tokenResponse.json();
-
-          const accessToken = accessTokenResponse.access_token;
-
-          setAccessToken(accessToken);
-
-          const decodedUser = jose.decodeJwt(accessToken);
-          setUser(decodedUser as AuthUser);
-
-          // Store access token in secure storage
-          tokenCache?.saveToken(TOKEN_KEY_NAME, accessToken);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    } else if (response?.type === 'error') {
+  const handleAuthResponse = useCallback(async () => {
+    if (response?.type === 'error') {
       setError(response.error as AuthError);
+      return;
     }
-  }, [isWeb, request?.codeVerifier, response]);
+
+    try {
+      setIsLoading(true);
+
+      const tokenResponse = await getTokenResponse();
+
+      if (!tokenResponse.ok) {
+        console.error(`Token request failed with status: ${tokenResponse.status}`);
+        return;
+      }
+
+      if (isWeb) {
+        const { sessionData, error } = await handleWebTokenResponse(tokenResponse);
+        if (error) {
+          console.error('Failed to authenticate');
+          return;
+        }
+
+        setUser(sessionData);
+      } else {
+        const { accessToken, decodedUser } = await handleNativeTokenResponse(tokenResponse);
+
+        setAccessToken(accessToken);
+
+        setUser(decodedUser);
+
+        // Store access token in secure storage
+        tokenCache?.saveToken(TOKEN_KEY_NAME, accessToken);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getTokenResponse, isWeb, response]);
 
   useEffect(() => {
-    handleResponse();
-  }, [handleResponse]);
+    handleAuthResponse();
+  }, [handleAuthResponse]);
 
   useEffect(() => {
     const restoreSession = async () => {
