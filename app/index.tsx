@@ -1,23 +1,16 @@
-import { ActivityIndicator, Button, Text, View } from 'react-native';
+import { Button, Text, View } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import LoginForm from './components/LoginForm';
 import { BASE_URL } from '@/constants';
 import { useState } from 'react';
+import FullScreenLoader from './components/FullSscreenLoader';
 
 export default function Index() {
   const { user, isLoading, signOut, fetchWithAuth } = useAuth();
   const [data, setData] = useState<any>(null);
+
   if (isLoading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <FullScreenLoader />;
   }
 
   if (!user) {

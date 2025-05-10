@@ -1,7 +1,8 @@
+import { FC } from 'react';
 import { View, Text, Button } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function LoginForm() {
+const LoginForm: FC = () => {
   const { signIn } = useAuth();
 
   return (
@@ -15,4 +16,6 @@ export default function LoginForm() {
       <Button title="Sign in with Google" onPress={signIn} />
     </View>
   );
-}
+};
+
+export default LoginForm;

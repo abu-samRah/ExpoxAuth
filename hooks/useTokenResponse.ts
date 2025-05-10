@@ -1,25 +1,22 @@
 import { BASE_URL } from '@/constants';
+import { AuthRequest } from 'expo-auth-session';
 import { useCallback, useMemo } from 'react';
 
-export const useTokenResponse = (code: string, isWeb: boolean, request: any) => {
+export const useTokenResponse = (code: string, isWeb: boolean, request: AuthRequest | null) => {
   // Create form data to send to our token endpoint
   // We include both the code and platform information
   // The platform info helps our server handle web vs native differently
-  const formData = useMemo(() => new FormData(), []);
-  formData.append('code', code);
 
-  // Add platform information for the backend to handle appropriately
-  if (isWeb) {
-    formData.append('platform', 'web');
-  }
+  const formData = useMemo(() => {
+    const formData = new FormData();
 
-  // Get the code verifier from the request object
-  // This is the same verifier that was used to generate the code challenge
-  if (request?.codeVerifier) {
-    formData.append('code_verifier', request.codeVerifier);
-  } else {
-    console.warn('No code verifier found in request object');
-  }
+    formData.append('code', code); // Append the new code
+
+    formData.append('platform', isWeb ? 'web' : 'native'); // Append platform info
+    formData.append('code_verifier', request?.codeVerifier || ''); // Append code verifier if available
+
+    return formData;
+  }, [code, isWeb, request?.codeVerifier]);
 
   // Send the authorization code to our token endpoint
   // The server will exchange this code with Google for access and refresh tokens

@@ -55,7 +55,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const getTokenResponse = useTokenResponse(code, isWeb, request);
 
   const handleAuthResponse = useCallback(async () => {
-    if (response?.type === 'error') {
+    if (!response) return;
+
+    if (response.type === 'error') {
       setError(response.error as AuthError);
       return;
     }
@@ -65,8 +67,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       const tokenResponse = await getTokenResponse();
 
+      console.log('tokenResponse', { tokenResponse });
+
       if (!tokenResponse.ok) {
         console.error(`Token request failed with status: ${tokenResponse.status}`);
+
         return;
       }
 
@@ -115,26 +120,27 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           }
         } else {
           const storedToken = await tokenCache?.getToken(TOKEN_KEY_NAME);
-          if (storedToken) {
-            try {
-              const decodedUser = jose.decodeJwt(storedToken);
-              const exp = decodedUser.exp;
-              const now = Math.floor(Date.now() / 1000);
+          if (!storedToken) return;
 
-              if (exp && exp > now) {
-                setUser(decodedUser as AuthUser);
-                setAccessToken(storedToken);
-              } else {
-                setUser(null);
-                setAccessToken(null);
-                tokenCache?.deleteToken(TOKEN_KEY_NAME);
-              }
-            } catch (e) {
-              console.error(e);
+          try {
+            const decodedUser = jose.decodeJwt(storedToken);
+            const exp = decodedUser.exp;
+            const now = Math.floor(Date.now() / 1000);
+
+            if (exp && exp > now) {
+              setUser(decodedUser as AuthUser);
+              setAccessToken(storedToken);
+            } else {
+              setUser(null);
+              setAccessToken(null);
+              tokenCache?.deleteToken(TOKEN_KEY_NAME);
             }
+          } catch (e) {
+            console.error(e);
           }
         }
       } catch (e) {
+        console.error(e);
       } finally {
         setIsLoading(false);
       }
