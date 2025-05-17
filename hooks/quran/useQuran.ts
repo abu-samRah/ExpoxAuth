@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchSurah, fetchSurahList } from '../lib/api/quran';
-import type { SurahResponse, SurahListResponse } from '../lib/schemas/quran';
+import { fetchSurah, fetchSurahList } from '../../lib/api/quran';
+import type { SurahResponse, SurahListResponse } from '../../lib/schemas/quran';
 import { ZodError } from 'zod';
 
 // Custom error type for validation errors

@@ -1,78 +1,89 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
+  ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
-import { useSurah } from '@/hooks/useQuran';
-import { Ayah } from '@/types/quran';
-
-type Edition = 'quran-uthmani' | 'en.sahih';
+import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
+import { useSurah } from '../../hooks/useQuran';
+import type { Ayah } from '../../lib/schemas/quran';
 
 export default function SurahPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [edition, setEdition] = useState<Edition>('quran-uthmani');
-  const { data: surah, isLoading, error } = useSurah(Number(id), edition);
+  const router = useRouter();
+  const surahNumber = parseInt(id, 10);
 
-  const toggleEdition = () => {
-    setEdition((prev) => (prev === 'quran-uthmani' ? 'en.sahih' : 'quran-uthmani'));
-  };
+  const { data, isLoading, error } = useSurah(surahNumber);
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>
+          {error instanceof Error ? error.message : 'An error occurred'}
+        </Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+          <Text style={styles.retryText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!data?.data) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>Surah not found</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+          <Text style={styles.retryText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const { name, englishName, englishNameTranslation, numberOfAyahs, revelationType, ayahs } =
+    data.data;
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: `Surah ${id}`,
+          title: `${surahNumber}. ${englishName}`,
           headerBackTitle: 'Back',
-          headerRight: () => (
-            <TouchableOpacity onPress={toggleEdition} style={styles.languageToggle}>
-              <Text style={styles.languageToggleText}>
-                {edition === 'quran-uthmani' ? 'English' : 'Arabic'}
-              </Text>
-            </TouchableOpacity>
-          ),
         }}
       />
-      {isLoading ? (
-        <View style={styles.container}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      ) : error ? (
-        <View style={styles.container}>
-          <Text style={styles.errorText}>Error loading Surah: {error.message}</Text>
-        </View>
-      ) : !surah ? (
-        <View style={styles.container}>
-          <Text style={styles.errorText}>Surah not found</Text>
-        </View>
-      ) : (
-        <ScrollView style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.surahName}>{surah.data.name}</Text>
-            <Text style={styles.surahTranslation}>{surah.data.englishName}</Text>
-            <Text style={styles.surahInfo}>
-              {surah.data.revelationType} • {surah.data.numberOfAyahs} Verses
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.arabicName}>{name}</Text>
+          <Text style={styles.englishName}>{englishName}</Text>
+          <Text style={styles.translation}>{englishNameTranslation}</Text>
+          <View style={styles.metaContainer}>
+            <Text style={styles.metaText}>
+              {numberOfAyahs} Verses • {revelationType}
             </Text>
           </View>
+        </View>
 
-          <View style={styles.versesContainer}>
-            {surah.data.ayahs.map((ayah: Ayah) => (
-              <View key={ayah.number} style={styles.verseContainer}>
-                <View style={styles.verseNumber}>
-                  <Text style={styles.verseNumberText}>{ayah.numberInSurah}</Text>
-                </View>
-                <Text style={[styles.verseText, edition === 'en.sahih' && styles.verseTextEnglish]}>
-                  {ayah.text}
-                </Text>
+        <View style={styles.versesContainer}>
+          {ayahs.map((ayah: Ayah) => (
+            <View key={ayah.numberInSurah} style={styles.verseContainer}>
+              <View style={styles.verseNumber}>
+                <Text style={styles.verseNumberText}>{ayah.numberInSurah}</Text>
               </View>
-            ))}
-          </View>
-        </ScrollView>
-      )}
+              <Text style={styles.arabicText}>{ayah.text}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
     </>
   );
 }
@@ -82,75 +93,94 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   header: {
     padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8f8f8',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#eee',
   },
-  surahName: {
+  arabicName: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: '#333',
     textAlign: 'center',
     marginBottom: 8,
   },
-  surahTranslation: {
+  englishName: {
     fontSize: 24,
-    textAlign: 'center',
     color: '#666',
-    marginBottom: 8,
-  },
-  surahInfo: {
-    fontSize: 16,
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  translation: {
+    fontSize: 18,
     color: '#888',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  metaText: {
+    fontSize: 16,
+    color: '#666',
   },
   versesContainer: {
     padding: 16,
   },
   verseContainer: {
-    flexDirection: 'row',
     marginBottom: 24,
-    paddingHorizontal: 8,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   verseNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    marginBottom: 12,
   },
   verseNumberText: {
+    color: '#fff',
     fontSize: 16,
-    color: '#666',
+    fontWeight: 'bold',
   },
-  verseText: {
-    flex: 1,
+  arabicText: {
     fontSize: 24,
-    lineHeight: 40,
+    color: '#333',
     textAlign: 'right',
-  },
-  verseTextEnglish: {
-    fontSize: 18,
-    lineHeight: 28,
-    textAlign: 'left',
+    lineHeight: 40,
   },
   errorText: {
+    color: '#666',
     fontSize: 16,
-    color: 'red',
     textAlign: 'center',
-    margin: 20,
+    marginBottom: 16,
   },
-  languageToggle: {
-    marginRight: 16,
-    padding: 8,
+  retryButton: {
+    padding: 12,
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
   },
-  languageToggleText: {
-    color: '#007AFF',
+  retryText: {
+    color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
   },
 });

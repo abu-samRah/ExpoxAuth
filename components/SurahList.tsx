@@ -1,78 +1,61 @@
+import React, { useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
   TextInput,
-  RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
-import { useSurahList } from '@/hooks/useQuran';
 import { useRouter } from 'expo-router';
-import { useState, useCallback, useMemo } from 'react';
-import { Surah } from '@/types/quran';
+import { useSurahList } from '../hooks/useQuran';
+import type { SurahListItem } from '../lib/schemas/quran';
 
 export function SurahList() {
   const router = useRouter();
-  const { data, isLoading, error, refetch } = useSurahList();
   const [searchQuery, setSearchQuery] = useState('');
+  const { data, isLoading, error } = useSurahList();
 
-  const filteredSurahs = useMemo(() => {
-    if (!data?.data) return [];
-    return data.data.filter(
-      (surah) =>
-        surah.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        surah.englishNameTranslation.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [data?.data, searchQuery]);
+  const handleSurahPress = (surah: SurahListItem) => {
+    router.push({
+      pathname: '/surah/[id]',
+      params: { id: surah.number.toString() },
+    });
+  };
 
-  const handleSurahPress = useCallback(
-    (surah: Surah) => {
-      router.push({
-        pathname: '/surah/[id]',
-        params: { id: surah.number.toString() },
-      });
-    },
-    [router],
-  );
-
-  const renderItem = useCallback(
-    ({ item }: { item: Surah }) => (
-      <TouchableOpacity
-        style={styles.surahItem}
-        onPress={() => handleSurahPress(item)}
-        activeOpacity={0.7}>
-        <View style={styles.surahNumber}>
-          <Text style={styles.numberText}>{item.number}</Text>
-        </View>
-        <View style={styles.surahInfo}>
-          <Text style={styles.surahName}>{item.englishName}</Text>
-          <Text style={styles.surahTranslation}>{item.englishNameTranslation}</Text>
-          <Text style={styles.surahMeta}>
-            {item.numberOfAyahs} verses • {item.revelationType}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    ),
-    [handleSurahPress],
-  );
-
-  if (isLoading && !data) {
+  const filteredSurahs = data?.data.filter((surah) => {
+    const searchLower = searchQuery.toLowerCase();
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" />
+      surah.name.toLowerCase().includes(searchLower) ||
+      surah.englishName.toLowerCase().includes(searchLower) ||
+      surah.englishNameTranslation.toLowerCase().includes(searchLower) ||
+      surah.number.toString().includes(searchQuery)
+    );
+  });
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Error: {error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Retry</Text>
-        </TouchableOpacity>
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>
+          {error instanceof Error ? error.message : 'An error occurred'}
+        </Text>
+      </View>
+    );
+  }
+
+  if (!data?.data.length) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>No Surahs found</Text>
       </View>
     );
   }
@@ -81,7 +64,7 @@ export function SurahList() {
     <View style={styles.container}>
       <TextInput
         style={styles.searchInput}
-        placeholder="Search surah..."
+        placeholder="Search Surahs..."
         value={searchQuery}
         onChangeText={setSearchQuery}
         placeholderTextColor="#666"
@@ -89,15 +72,20 @@ export function SurahList() {
       <FlatList
         data={filteredSurahs}
         keyExtractor={(item) => item.number.toString()}
-        renderItem={renderItem}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {searchQuery ? 'No surahs found' : 'No surahs available'}
-            </Text>
-          </View>
-        }
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.surahItem} onPress={() => handleSurahPress(item)}>
+            <View style={styles.surahNumber}>
+              <Text style={styles.numberText}>{item.number}</Text>
+            </View>
+            <View style={styles.surahInfo}>
+              <Text style={styles.surahName}>{item.englishName}</Text>
+              <Text style={styles.surahTranslation}>{item.englishNameTranslation}</Text>
+              <Text style={styles.verseCount}>
+                {item.numberOfAyahs} Verses • {item.revelationType}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
         contentContainerStyle={styles.listContent}
       />
     </View>
@@ -109,7 +97,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  centerContainer: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -121,30 +109,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     fontSize: 16,
+    color: '#333',
   },
   listContent: {
-    paddingBottom: 20,
+    padding: 16,
   },
   surahItem: {
     flexDirection: 'row',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
     backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   surahNumber: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   numberText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
   },
   surahInfo: {
     flex: 1,
@@ -156,35 +150,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   surahTranslation: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
     marginBottom: 4,
   },
-  surahMeta: {
-    fontSize: 12,
+  verseCount: {
+    fontSize: 14,
     color: '#888',
   },
   errorText: {
-    color: '#ff3b30',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  retryButton: {
-    padding: 12,
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyText: {
     color: '#666',
     fontSize: 16,
+    textAlign: 'center',
   },
 });
