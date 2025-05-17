@@ -30,6 +30,9 @@ export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
 export const APP_SCHEME = process.env.EXPO_PUBLIC_SCHEME;
 export const JWT_SECRET = process.env.JWT_SECRET!;
 
+// API Constants
+export const QURAN_API_BASE_URL = 'https://api.alquran.cloud/v1';
+
 // Cookie Settings
 export const COOKIE_OPTIONS = {
   httpOnly: true,

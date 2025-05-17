@@ -4,6 +4,7 @@ import LoginForm from './components/LoginForm';
 import { BASE_URL } from '@/constants';
 import { useState } from 'react';
 import FullScreenLoader from './components/FullSscreenLoader';
+import { SurahList } from './components/SurahList';
 
 export default function Index() {
   const { user, isLoading, signOut, fetchWithAuth } = useAuth();
@@ -37,6 +38,7 @@ export default function Index() {
           setData(await res.json());
         }}
       />
+      <SurahList />
     </View>
   );
 }
