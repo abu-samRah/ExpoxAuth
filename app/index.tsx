@@ -1,15 +1,11 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
-import LoginForm from './components/LoginForm';
-import { BASE_URL } from '@/constants';
-import { useState } from 'react';
-import FullScreenLoader from './components/FullSscreenLoader';
 import { SurahList } from './components/SurahList';
-import { Ionicons } from '@expo/vector-icons';
+import FullScreenLoader from './components/FullSscreenLoader';
+import LoginForm from './components/LoginForm';
 
-export default function Index() {
-  const { user, isLoading, signOut, fetchWithAuth } = useAuth();
-  const [data, setData] = useState<any>(null);
+export default function Home() {
+  const { user, signOut, isLoading } = useAuth();
 
   if (isLoading) {
     return <FullScreenLoader />;
@@ -20,16 +16,15 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Quran App</Text>
-        <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-          <Ionicons name="log-out-outline" size={24} color="#007AFF" />
+        <Text style={styles.title}>Quran App</Text>
+        <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
       <SurahList />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -42,24 +37,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    borderBottomColor: '#e9ecef',
   },
-  headerTitle: {
+  title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 8,
   },
   signOutText: {
-    marginLeft: 4,
     color: '#007AFF',
     fontSize: 16,
   },

@@ -8,7 +8,7 @@ import {
   TextInput,
   RefreshControl,
 } from 'react-native';
-import { useSurahList } from '../hooks/useQuran';
+import { useSurahList } from '@/app/hooks/useQuran';
 import { useRouter } from 'expo-router';
 import { useState, useCallback, useMemo } from 'react';
 import { Surah } from '@/types/quran';
@@ -27,13 +27,21 @@ export function SurahList() {
     );
   }, [data?.data, searchQuery]);
 
-  const handleSurahPress = useCallback((surahNumber: number) => {}, []);
+  const handleSurahPress = useCallback(
+    (surah: Surah) => {
+      router.push({
+        pathname: '/surah/[id]',
+        params: { id: surah.number.toString() },
+      });
+    },
+    [router],
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: Surah }) => (
       <TouchableOpacity
         style={styles.surahItem}
-        onPress={() => handleSurahPress(item.number)}
+        onPress={() => handleSurahPress(item)}
         activeOpacity={0.7}>
         <View style={styles.surahNumber}>
           <Text style={styles.numberText}>{item.number}</Text>
