@@ -4,10 +4,10 @@ import { QueryProvider } from '@/context/QueryProvider';
 
 export default function RootLayout() {
   return (
-    <QueryProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <QueryProvider>
         <Stack screenOptions={{ headerShown: false }} />
-      </AuthProvider>
-    </QueryProvider>
+      </QueryProvider>
+    </AuthProvider>
   );
 }

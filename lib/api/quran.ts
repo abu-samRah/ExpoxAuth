@@ -1,5 +1,10 @@
-import { SurahListResponse, SurahResponse } from '@/types/quran';
-import { quranApi } from './client';
+import { createApiClient } from './client';
+import { QURAN_API_BASE_URL } from '@/constants';
+import { SurahResponse, SurahListResponse } from '@/types/quran';
+
+const quranApi = createApiClient({
+  baseUrl: QURAN_API_BASE_URL,
+});
 
 // Cache surah list for 1 hour since it rarely changes
 export async function fetchSurahList(): Promise<SurahListResponse> {
