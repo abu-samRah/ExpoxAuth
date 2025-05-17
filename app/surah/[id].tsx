@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { useSurah } from '@/app/hooks/useQuran';
+import { useSurah } from '@/hooks/useQuran';
 import { Ayah } from '@/types/quran';
 
 type Edition = 'quran-uthmani' | 'en.sahih';

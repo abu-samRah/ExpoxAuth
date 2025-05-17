@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
-import { SurahList } from './components/SurahList';
-import FullScreenLoader from './components/FullSscreenLoader';
-import LoginForm from './components/LoginForm';
+import { SurahList } from '../components/SurahList';
+import FullScreenLoader from '../components/FullSscreenLoader';
+import LoginForm from '../components/LoginForm';
 
 export default function Home() {
   const { user, signOut, isLoading } = useAuth();

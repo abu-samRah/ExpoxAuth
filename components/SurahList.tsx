@@ -8,7 +8,7 @@ import {
   TextInput,
   RefreshControl,
 } from 'react-native';
-import { useSurahList } from '@/app/hooks/useQuran';
+import { useSurahList } from '@/hooks/useQuran';
 import { useRouter } from 'expo-router';
 import { useState, useCallback, useMemo } from 'react';
 import { Surah } from '@/types/quran';
