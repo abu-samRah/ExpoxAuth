@@ -1,12 +1,26 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { useSurah } from '@/app/hooks/useQuran';
 import { Ayah } from '@/types/quran';
 
+type Edition = 'quran-uthmani' | 'en.sahih';
+
 export default function SurahPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: surah, isLoading, error } = useSurah(Number(id));
+  const [edition, setEdition] = useState<Edition>('quran-uthmani');
+  const { data: surah, isLoading, error } = useSurah(Number(id), edition);
+
+  const toggleEdition = () => {
+    setEdition((prev) => (prev === 'quran-uthmani' ? 'en.sahih' : 'quran-uthmani'));
+  };
 
   return (
     <>
@@ -14,6 +28,13 @@ export default function SurahPage() {
         options={{
           title: `Surah ${id}`,
           headerBackTitle: 'Back',
+          headerRight: () => (
+            <TouchableOpacity onPress={toggleEdition} style={styles.languageToggle}>
+              <Text style={styles.languageToggleText}>
+                {edition === 'quran-uthmani' ? 'English' : 'Arabic'}
+              </Text>
+            </TouchableOpacity>
+          ),
         }}
       />
       {isLoading ? (
@@ -44,7 +65,9 @@ export default function SurahPage() {
                 <View style={styles.verseNumber}>
                   <Text style={styles.verseNumberText}>{ayah.numberInSurah}</Text>
                 </View>
-                <Text style={styles.verseText}>{ayah.text}</Text>
+                <Text style={[styles.verseText, edition === 'en.sahih' && styles.verseTextEnglish]}>
+                  {ayah.text}
+                </Text>
               </View>
             ))}
           </View>
@@ -111,10 +134,23 @@ const styles = StyleSheet.create({
     lineHeight: 40,
     textAlign: 'right',
   },
+  verseTextEnglish: {
+    fontSize: 18,
+    lineHeight: 28,
+    textAlign: 'left',
+  },
   errorText: {
     fontSize: 16,
     color: 'red',
     textAlign: 'center',
     margin: 20,
+  },
+  languageToggle: {
+    marginRight: 16,
+    padding: 8,
+  },
+  languageToggleText: {
+    color: '#007AFF',
+    fontSize: 16,
   },
 });
