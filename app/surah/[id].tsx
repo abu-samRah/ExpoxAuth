@@ -7,10 +7,12 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurah } from '../../hooks/useQuran';
 import type { Ayah } from '../../lib/schemas/quran';
 import { useThemeColors } from '../../lib/theme/useTheme';
+import { AppHeader } from '../../components/AppHeader';
+import { SettingsMenu } from '../../components/SettingsMenu';
 
 export default function SurahPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,18 +62,14 @@ export default function SurahPage() {
     data.data;
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: `${surahNumber}. ${englishName}`,
-          headerBackTitle: 'Back',
-          headerStyle: {
-            backgroundColor: colors.primary,
-          },
-          headerTintColor: colors.buttonText,
-        }}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AppHeader
+        title={englishName}
+        subtitle={`${surahNumber}`}
+        showBackButton
+        rightComponent={<SettingsMenu />}
       />
-      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView style={styles.content}>
         <View
           style={[
             styles.header,
@@ -107,12 +105,15 @@ export default function SurahPage() {
           ))}
         </View>
       </ScrollView>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  content: {
     flex: 1,
   },
   centered: {

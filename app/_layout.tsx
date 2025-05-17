@@ -1,5 +1,6 @@
+import React from 'react';
 import { Stack } from 'expo-router';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/context/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '../lib/theme/ThemeProvider';
@@ -29,21 +30,10 @@ function RootLayoutContent() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ThemeProvider>
         <Stack
           screenOptions={{
-            headerStyle: {
-              backgroundColor: colors.primary,
-            },
-            headerTintColor: colors.buttonText,
-            headerTitleStyle: {
-              fontWeight: 'bold',
-              color: colors.buttonText,
-            },
-            headerRight: () => <ThemeToggle />,
-            contentStyle: {
-              backgroundColor: colors.background,
-            },
+            headerShown: false,
           }}>
           <Stack.Screen
             name="index"
@@ -52,7 +42,7 @@ function RootLayoutContent() {
             }}
           />
         </Stack>
-      </SafeAreaView>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
@@ -62,7 +52,13 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider>
-          <RootLayoutContent />
+          <SafeAreaProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            />
+          </SafeAreaProvider>
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
