@@ -1,11 +1,15 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '../lib/theme/useTheme';
 import { SurahList } from '../components/SurahList';
+import { SettingsMenu } from '../components/SettingsMenu';
 import FullScreenLoader from '../components/FullSscreenLoader';
 import LoginForm from '../components/LoginForm';
 
 export default function Home() {
-  const { user, signOut, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
+  const colors = useThemeColors();
 
   if (isLoading) {
     return <FullScreenLoader />;
@@ -16,12 +20,12 @@ export default function Home() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Quran App</Text>
-        <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
+        <Text style={[styles.title, { color: colors.buttonText }]}>Quran App</Text>
+        <View style={styles.headerRight}>
+          <SettingsMenu />
+        </View>
       </View>
       <SurahList />
     </View>
@@ -31,25 +35,19 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerRight: {
+    marginRight: -8,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-  },
-  signOutButton: {
-    padding: 8,
-  },
-  signOutText: {
-    color: '#007AFF',
-    fontSize: 16,
   },
 });

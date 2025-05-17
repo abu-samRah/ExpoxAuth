@@ -11,11 +11,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useSurahList } from '../hooks/useQuran';
 import type { SurahListItem } from '../lib/schemas/quran';
+import { useThemeColors } from '../lib/theme/useTheme';
 
 export function SurahList() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const { data, isLoading, error } = useSurahList();
+  const colors = useThemeColors();
 
   const handleSurahPress = (surah: SurahListItem) => {
     router.push({
@@ -36,16 +38,16 @@ export function SurahList() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.errorText }]}>
           {error instanceof Error ? error.message : 'An error occurred'}
         </Text>
       </View>
@@ -54,33 +56,47 @@ export function SurahList() {
 
   if (!data?.data.length) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>No Surahs found</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.errorText }]}>No Surahs found</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <TextInput
-        style={styles.searchInput}
+        style={[
+          styles.searchInput,
+          {
+            backgroundColor: colors.searchBackground,
+            color: colors.textPrimary,
+          },
+        ]}
         placeholder="Search Surahs..."
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholderTextColor="#666"
+        placeholderTextColor={colors.textTertiary}
       />
       <FlatList
         data={filteredSurahs}
         keyExtractor={(item) => item.number.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.surahItem} onPress={() => handleSurahPress(item)}>
-            <View style={styles.surahNumber}>
-              <Text style={styles.numberText}>{item.number}</Text>
+          <TouchableOpacity
+            style={[styles.surahItem, { backgroundColor: colors.card }]}
+            onPress={() => handleSurahPress(item)}>
+            <View style={[styles.surahNumber, { backgroundColor: colors.verseNumber }]}>
+              <Text style={[styles.numberText, { color: colors.verseNumberText }]}>
+                {item.number}
+              </Text>
             </View>
             <View style={styles.surahInfo}>
-              <Text style={styles.surahName}>{item.englishName}</Text>
-              <Text style={styles.surahTranslation}>{item.englishNameTranslation}</Text>
-              <Text style={styles.verseCount}>
+              <Text style={[styles.surahName, { color: colors.textPrimary }]}>
+                {item.englishName}
+              </Text>
+              <Text style={[styles.surahTranslation, { color: colors.textSecondary }]}>
+                {item.englishNameTranslation}
+              </Text>
+              <Text style={[styles.verseCount, { color: colors.textTertiary }]}>
                 {item.numberOfAyahs} Verses • {item.revelationType}
               </Text>
             </View>
@@ -95,7 +111,6 @@ export function SurahList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   centered: {
     flex: 1,
@@ -106,10 +121,8 @@ const styles = StyleSheet.create({
   searchInput: {
     margin: 16,
     padding: 12,
-    backgroundColor: '#f5f5f5',
     borderRadius: 8,
     fontSize: 16,
-    color: '#333',
   },
   listContent: {
     padding: 16,
@@ -117,7 +130,6 @@ const styles = StyleSheet.create({
   surahItem: {
     flexDirection: 'row',
     padding: 16,
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
@@ -130,13 +142,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
   numberText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -146,20 +156,16 @@ const styles = StyleSheet.create({
   surahName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   surahTranslation: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 4,
   },
   verseCount: {
     fontSize: 14,
-    color: '#888',
   },
   errorText: {
-    color: '#666',
     fontSize: 16,
     textAlign: 'center',
   },

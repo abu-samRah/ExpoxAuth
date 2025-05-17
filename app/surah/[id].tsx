@@ -10,30 +10,34 @@ import {
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { useSurah } from '../../hooks/useQuran';
 import type { Ayah } from '../../lib/schemas/quran';
+import { useThemeColors } from '../../lib/theme/useTheme';
 
 export default function SurahPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const surahNumber = parseInt(id, 10);
+  const colors = useThemeColors();
 
   const { data, isLoading, error } = useSurah(surahNumber);
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.errorText }]}>
           {error instanceof Error ? error.message : 'An error occurred'}
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
-          <Text style={styles.retryText}>Go Back</Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: colors.buttonBackground }]}
+          onPress={() => router.back()}>
+          <Text style={[styles.retryText, { color: colors.buttonText }]}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -41,10 +45,12 @@ export default function SurahPage() {
 
   if (!data?.data) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Surah not found</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
-          <Text style={styles.retryText}>Go Back</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.errorText }]}>Surah not found</Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: colors.buttonBackground }]}
+          onPress={() => router.back()}>
+          <Text style={[styles.retryText, { color: colors.buttonText }]}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -59,15 +65,28 @@ export default function SurahPage() {
         options={{
           title: `${surahNumber}. ${englishName}`,
           headerBackTitle: 'Back',
+          headerStyle: {
+            backgroundColor: colors.primary,
+          },
+          headerTintColor: colors.buttonText,
         }}
       />
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.arabicName}>{name}</Text>
-          <Text style={styles.englishName}>{englishName}</Text>
-          <Text style={styles.translation}>{englishNameTranslation}</Text>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: colors.card,
+              borderBottomColor: colors.border,
+            },
+          ]}>
+          <Text style={[styles.arabicName, { color: colors.textPrimary }]}>{name}</Text>
+          <Text style={[styles.englishName, { color: colors.textSecondary }]}>{englishName}</Text>
+          <Text style={[styles.translation, { color: colors.textTertiary }]}>
+            {englishNameTranslation}
+          </Text>
           <View style={styles.metaContainer}>
-            <Text style={styles.metaText}>
+            <Text style={[styles.metaText, { color: colors.textSecondary }]}>
               {numberOfAyahs} Verses • {revelationType}
             </Text>
           </View>
@@ -75,11 +94,15 @@ export default function SurahPage() {
 
         <View style={styles.versesContainer}>
           {ayahs.map((ayah: Ayah) => (
-            <View key={ayah.numberInSurah} style={styles.verseContainer}>
-              <View style={styles.verseNumber}>
-                <Text style={styles.verseNumberText}>{ayah.numberInSurah}</Text>
+            <View
+              key={ayah.numberInSurah}
+              style={[styles.verseContainer, { backgroundColor: colors.card }]}>
+              <View style={[styles.verseNumber, { backgroundColor: colors.verseNumber }]}>
+                <Text style={[styles.verseNumberText, { color: colors.verseNumberText }]}>
+                  {ayah.numberInSurah}
+                </Text>
               </View>
-              <Text style={styles.arabicText}>{ayah.text}</Text>
+              <Text style={[styles.arabicText, { color: colors.textPrimary }]}>{ayah.text}</Text>
             </View>
           ))}
         </View>
@@ -91,7 +114,6 @@ export default function SurahPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   centered: {
     flex: 1,
@@ -101,26 +123,21 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: '#f8f8f8',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   arabicName: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
     textAlign: 'center',
     marginBottom: 8,
   },
   englishName: {
     fontSize: 24,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 4,
   },
   translation: {
     fontSize: 18,
-    color: '#888',
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -131,7 +148,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 16,
-    color: '#666',
   },
   versesContainer: {
     padding: 16,
@@ -139,7 +155,6 @@ const styles = StyleSheet.create({
   verseContainer: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: '#fff',
     borderRadius: 12,
     elevation: 2,
     shadowColor: '#000',
@@ -151,35 +166,29 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   verseNumberText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
   arabicText: {
     fontSize: 24,
-    color: '#333',
     textAlign: 'right',
     lineHeight: 40,
   },
   errorText: {
-    color: '#666',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 16,
   },
   retryButton: {
     padding: 12,
-    backgroundColor: '#4CAF50',
     borderRadius: 8,
   },
   retryText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
