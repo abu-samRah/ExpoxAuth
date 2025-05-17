@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '../lib/theme/useTheme';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type AppHeaderProps = {
   title: string;
@@ -16,8 +17,12 @@ export function AppHeader({ title, subtitle, showBackButton, rightComponent }: A
   const router = useRouter();
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.primary }]}>
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <LinearGradient
+        colors={[colors.primary, colors.primaryDark || colors.primary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.leftSection}>
             {showBackButton && (
@@ -34,9 +39,9 @@ export function AppHeader({ title, subtitle, showBackButton, rightComponent }: A
               )}
             </View>
           </View>
-          {rightComponent}
+          {rightComponent && <View style={styles.rightSection}>{rightComponent}</View>}
         </View>
-      </View>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -47,17 +52,17 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 8,
-    paddingBottom: 12,
+    paddingBottom: 16,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerContent: {
     flexDirection: 'row',
@@ -68,11 +73,23 @@ const styles = StyleSheet.create({
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  rightSection: {
+    marginLeft: 16,
   },
   backButton: {
-    padding: 8,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 12,
     marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   backButtonText: {
     fontSize: 20,
@@ -81,11 +98,13 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    flex: 1,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   subtitle: {
     fontSize: 28,

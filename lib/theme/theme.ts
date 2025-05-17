@@ -1,8 +1,10 @@
 import { useColorScheme } from 'react-native';
+import { createContext, useContext } from 'react';
 
 export type ThemeColors = {
   // Base colors
   primary: string;
+  primaryDark: string;
   background: string;
   card: string;
   text: string;
@@ -25,26 +27,28 @@ export type ThemeColors = {
 
 export const lightTheme: ThemeColors = {
   primary: '#4CAF50',
+  primaryDark: '#388E3C',
   background: '#FFFFFF',
-  card: '#FFFFFF',
+  card: '#F5F5F5',
   text: '#000000',
-  border: '#EEEEEE',
+  border: '#E0E0E0',
   notification: '#FF3B30',
 
-  textPrimary: '#333333',
-  textSecondary: '#666666',
-  textTertiary: '#888888',
+  textPrimary: '#212121',
+  textSecondary: '#757575',
+  textTertiary: '#9E9E9E',
 
   searchBackground: '#F5F5F5',
   verseNumber: '#4CAF50',
   verseNumberText: '#FFFFFF',
-  errorText: '#666666',
-  buttonBackground: '#4CAF50',
+  errorText: '#D32F2F',
+  buttonBackground: 'rgba(255, 255, 255, 0.2)',
   buttonText: '#FFFFFF',
 };
 
 export const darkTheme: ThemeColors = {
-  primary: '#66BB6A',
+  primary: '#388E3C',
+  primaryDark: '#2E7D32',
   background: '#121212',
   card: '#1E1E1E',
   text: '#FFFFFF',
@@ -56,9 +60,21 @@ export const darkTheme: ThemeColors = {
   textTertiary: '#808080',
 
   searchBackground: '#2C2C2C',
-  verseNumber: '#66BB6A',
+  verseNumber: '#388E3C',
   verseNumberText: '#FFFFFF',
-  errorText: '#B0B0B0',
-  buttonBackground: '#66BB6A',
+  errorText: '#EF5350',
+  buttonBackground: 'rgba(255, 255, 255, 0.1)',
   buttonText: '#FFFFFF',
 };
+
+export const ThemeContext = createContext<{
+  isDark: boolean;
+  colors: ThemeColors;
+  toggleTheme: () => void;
+}>({
+  isDark: false,
+  colors: lightTheme,
+  toggleTheme: () => {},
+});
+
+export const useTheme = () => useContext(ThemeContext);
