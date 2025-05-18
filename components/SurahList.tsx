@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, FC } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { useSurahList } from '../hooks/useQuran';
 import type { SurahListItem } from '../lib/schemas/quran';
 import { useThemeColors } from '../lib/theme/useTheme';
 
-export function SurahList() {
+export const SurahList: FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const { data, isLoading, error } = useSurahList();
@@ -106,7 +106,7 @@ export function SurahList() {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

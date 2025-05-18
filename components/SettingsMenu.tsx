@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, FC } from 'react';
 import { Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
 import { useTheme } from '../lib/theme/useTheme';
 import { useAuth } from '../hooks/useAuth';
 
-export function SettingsMenu() {
+export const SettingsMenu: FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { isDark, toggleTheme, colors } = useTheme();
   const { signOut } = useAuth();
@@ -70,7 +70,7 @@ export function SettingsMenu() {
       </Modal>
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   menuButton: {

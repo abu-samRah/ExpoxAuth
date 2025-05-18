@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '../lib/theme/useTheme';
 import { useRouter } from 'expo-router';
@@ -12,7 +12,12 @@ type AppHeaderProps = {
   rightComponent?: React.ReactNode;
 };
 
-export function AppHeader({ title, subtitle, showBackButton, rightComponent }: AppHeaderProps) {
+export const AppHeader: FC<AppHeaderProps> = ({
+  title,
+  subtitle,
+  showBackButton,
+  rightComponent,
+}) => {
   const colors = useThemeColors();
   const router = useRouter();
 
@@ -44,7 +49,7 @@ export function AppHeader({ title, subtitle, showBackButton, rightComponent }: A
       </LinearGradient>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
