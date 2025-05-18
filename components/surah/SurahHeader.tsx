@@ -42,24 +42,24 @@ export const SurahHeader: React.FC<SurahHeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    padding: 20,
+    padding: 32,
     borderBottomWidth: 1,
   },
   arabicName: {
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  englishName: {
+    fontSize: 28,
     textAlign: 'center',
     marginBottom: 8,
   },
-  englishName: {
-    fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
   translation: {
-    fontSize: 18,
+    fontSize: 22,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   metaContainer: {
     flexDirection: 'row',
@@ -67,6 +67,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metaText: {
-    fontSize: 16,
+    fontSize: 18,
   },
 });

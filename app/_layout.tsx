@@ -19,6 +19,7 @@ function RootLayoutContent() {
           headerTintColor: colors.buttonText,
           headerTitleStyle: {
             fontWeight: 'bold',
+            fontSize: 24,
           },
           headerShadowVisible: false,
           headerBackground: () => (
