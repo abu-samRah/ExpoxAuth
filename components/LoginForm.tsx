@@ -38,9 +38,6 @@ const LoginForm: FC = () => {
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Start the Lottie animation
-    animationRef.current?.play();
   }, [fadeAnim, slideAnim]);
 
   const handlePressIn = () => {
