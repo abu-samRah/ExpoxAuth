@@ -3,10 +3,10 @@ import { View, StyleSheet } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '../lib/theme/useTheme';
 import { SurahList } from '../components/SurahList';
-import { SettingsMenu } from '../components/SettingsMenu';
-import { AppHeader } from '../components/AppHeader';
 import FullScreenLoader from '../components/FullSscreenLoader';
 import LoginForm from '../components/LoginForm';
+import { SettingsMenu } from '../components/SettingsMenu';
+import { Stack } from 'expo-router';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
@@ -21,10 +21,18 @@ export default function Home() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader title="Quran" subtitle="App" rightComponent={<SettingsMenu />} />
-      <SurahList />
-    </View>
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Quran',
+          headerTitle: 'Quran App',
+          headerRight: () => <SettingsMenu />,
+        }}
+      />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <SurahList />
+      </View>
+    </>
   );
 }
 

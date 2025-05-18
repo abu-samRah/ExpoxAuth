@@ -7,105 +7,119 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useSurah } from '../../hooks/useQuran';
 import type { Ayah } from '../../lib/schemas/quran';
 import { useThemeColors } from '../../lib/theme/useTheme';
-import { AppHeader } from '../../components/AppHeader';
 import { SettingsMenu } from '../../components/SettingsMenu';
 
 export default function SurahPage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
   const router = useRouter();
   const surahNumber = parseInt(id, 10);
   const colors = useThemeColors();
 
   const { data, isLoading, error } = useSurah(surahNumber);
 
-  if (isLoading) {
+  const Surah = () => {
+    if (isLoading) {
+      return (
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <Text style={[styles.errorText, { color: colors.errorText }]}>
+            {error instanceof Error ? error.message : 'An error occurred'}
+          </Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: colors.buttonBackground }]}
+            onPress={() => router.back()}>
+            <Text style={[styles.retryText, { color: colors.buttonText }]}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (!data?.data) {
+      return (
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <Text style={[styles.errorText, { color: colors.errorText }]}>Surah not found</Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: colors.buttonBackground }]}
+            onPress={() => router.back()}>
+            <Text style={[styles.retryText, { color: colors.buttonText }]}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const {
+      name: arabicName,
+      englishName,
+      englishNameTranslation,
+      numberOfAyahs,
+      revelationType,
+      ayahs,
+    } = data.data;
+
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ScrollView style={styles.content}>
+          <View
+            style={[
+              styles.header,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}>
+            <Text style={[styles.arabicName, { color: colors.textPrimary }]}>{arabicName}</Text>
+            <Text style={[styles.englishName, { color: colors.textSecondary }]}>{englishName}</Text>
+            <Text style={[styles.translation, { color: colors.textTertiary }]}>
+              {englishNameTranslation}
+            </Text>
+            <View style={styles.metaContainer}>
+              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                {numberOfAyahs} Verses • {revelationType}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.versesContainer}>
+            {ayahs.map((ayah: Ayah) => (
+              <View
+                key={ayah.numberInSurah}
+                style={[styles.verseContainer, { backgroundColor: colors.card }]}>
+                <View style={[styles.verseNumber, { backgroundColor: colors.verseNumber }]}>
+                  <Text style={[styles.verseNumberText, { color: colors.verseNumberText }]}>
+                    {ayah.numberInSurah}
+                  </Text>
+                </View>
+                <Text style={[styles.arabicText, { color: colors.textPrimary }]}>{ayah.text}</Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
     );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.errorText }]}>
-          {error instanceof Error ? error.message : 'An error occurred'}
-        </Text>
-        <TouchableOpacity
-          style={[styles.retryButton, { backgroundColor: colors.buttonBackground }]}
-          onPress={() => router.back()}>
-          <Text style={[styles.retryText, { color: colors.buttonText }]}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (!data?.data) {
-    return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.errorText }]}>Surah not found</Text>
-        <TouchableOpacity
-          style={[styles.retryButton, { backgroundColor: colors.buttonBackground }]}
-          onPress={() => router.back()}>
-          <Text style={[styles.retryText, { color: colors.buttonText }]}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const { name, englishName, englishNameTranslation, numberOfAyahs, revelationType, ayahs } =
-    data.data;
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <AppHeader
-        title={englishName}
-        subtitle={`${surahNumber}`}
-        showBackButton
-        rightComponent={<SettingsMenu />}
+    <>
+      <Stack.Screen
+        options={{
+          title: name,
+          headerBackTitle: 'Back',
+          headerRight: () => <SettingsMenu />,
+        }}
       />
-      <ScrollView style={styles.content}>
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: colors.card,
-              borderBottomColor: colors.border,
-            },
-          ]}>
-          <Text style={[styles.arabicName, { color: colors.textPrimary }]}>{name}</Text>
-          <Text style={[styles.englishName, { color: colors.textSecondary }]}>{englishName}</Text>
-          <Text style={[styles.translation, { color: colors.textTertiary }]}>
-            {englishNameTranslation}
-          </Text>
-          <View style={styles.metaContainer}>
-            <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-              {numberOfAyahs} Verses • {revelationType}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.versesContainer}>
-          {ayahs.map((ayah: Ayah) => (
-            <View
-              key={ayah.numberInSurah}
-              style={[styles.verseContainer, { backgroundColor: colors.card }]}>
-              <View style={[styles.verseNumber, { backgroundColor: colors.verseNumber }]}>
-                <Text style={[styles.verseNumberText, { color: colors.verseNumberText }]}>
-                  {ayah.numberInSurah}
-                </Text>
-              </View>
-              <Text style={[styles.arabicText, { color: colors.textPrimary }]}>{ayah.text}</Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-    </View>
+      <Surah />
+    </>
   );
 }
 

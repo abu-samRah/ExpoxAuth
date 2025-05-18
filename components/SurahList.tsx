@@ -22,7 +22,10 @@ export const SurahList: FC = () => {
   const handleSurahPress = (surah: SurahListItem) => {
     router.push({
       pathname: '/surah/[id]',
-      params: { id: surah.number.toString() },
+      params: {
+        id: surah.number.toString(),
+        name: surah.englishName,
+      },
     });
   };
 
