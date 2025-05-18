@@ -1,7 +1,18 @@
 import { FC, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Animated,
+  Dimensions,
+} from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useThemeColors } from '@/lib/theme/useTheme';
+import LottieView from 'lottie-react-native';
+
+const { width } = Dimensions.get('window');
 
 const LoginForm: FC = () => {
   const { signIn } = useAuth();
@@ -11,6 +22,7 @@ const LoginForm: FC = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const animationRef = useRef<LottieView>(null);
 
   useEffect(() => {
     // Start animations when component mounts
@@ -26,6 +38,9 @@ const LoginForm: FC = () => {
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Start the Lottie animation
+    animationRef.current?.play();
   }, [fadeAnim, slideAnim]);
 
   const handlePressIn = () => {
@@ -44,6 +59,18 @@ const LoginForm: FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.animationContainer}>
+        <LottieView
+          ref={animationRef}
+          source={require('@/assets/animations/quran-reading.json')}
+          style={styles.animation}
+          autoPlay
+          loop={true}
+          speed={0.7}
+          renderMode="AUTOMATIC"
+        />
+      </View>
+
       <Animated.View
         style={[
           styles.content,
@@ -85,10 +112,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  animationContainer: {
+    position: 'absolute',
+    top: 40,
+    left: 0,
+    right: 0,
+    height: width * 0.6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  animation: {
+    width: width * 0.6,
+    height: width * 0.6,
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
+    marginTop: width * 0.3,
   },
   header: {
     alignItems: 'center',
