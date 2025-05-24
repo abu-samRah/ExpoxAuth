@@ -4,19 +4,21 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
   TextInput,
   TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSurahList } from '../hooks/useQuran';
 import type { SurahListItem } from '../lib/schemas/quran';
 import { useThemeColors } from '../lib/theme/useTheme';
+import { SurahListSkeleton } from './Skeleton';
 
 export const SurahList: FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const { data: surahList, isLoading, error, refetch } = useSurahList();
+  console.log({ isLoading });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const colors = useThemeColors();
 
@@ -41,6 +43,10 @@ export const SurahList: FC = () => {
       setIsRefreshing(false);
     }
   }, [refetch]);
+
+  const handleScrollBeginDrag = useCallback(() => {
+    Keyboard.dismiss();
+  }, []);
 
   const filteredSurahs = useMemo(
     () =>
@@ -79,11 +85,7 @@ export const SurahList: FC = () => {
   );
 
   if (isLoading) {
-    return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <SurahListSkeleton itemCount={8} />;
   }
 
   if (error) {
@@ -126,6 +128,8 @@ export const SurahList: FC = () => {
         contentContainerStyle={styles.listContent}
         onRefresh={handleRefresh}
         refreshing={isRefreshing}
+        onScrollBeginDrag={handleScrollBeginDrag}
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );
@@ -134,6 +138,10 @@ export const SurahList: FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  searchContainer: {
+    padding: 16,
+    paddingBottom: 8,
   },
   centered: {
     flex: 1,
@@ -191,5 +199,28 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     textAlign: 'center',
+  },
+  // Skeleton styles
+  skeletonNumber: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+  },
+  skeletonLine: {
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonTitle: {
+    height: 20,
+    width: '70%',
+  },
+  skeletonSubtitle: {
+    height: 16,
+    width: '90%',
+  },
+  skeletonMeta: {
+    height: 14,
+    width: '60%',
   },
 });

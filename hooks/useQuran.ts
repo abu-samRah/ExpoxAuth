@@ -27,7 +27,7 @@ export function useSurahList() {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 60, // 1 hour,
   });
 }
 
