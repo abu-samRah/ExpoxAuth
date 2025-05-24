@@ -1,4 +1,4 @@
-import React, { useState, FC } from 'react';
+import React, { useState, FC, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,18 +16,31 @@ import { useThemeColors } from '../lib/theme/useTheme';
 export const SurahList: FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const { data, isLoading, error } = useSurahList();
+  const { data, isLoading, error, refetch } = useSurahList();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const colors = useThemeColors();
 
-  const handleSurahPress = (surah: SurahListItem) => {
-    router.push({
-      pathname: '/surah/[id]',
-      params: {
-        id: surah.number.toString(),
-        name: surah.englishName,
-      },
-    });
-  };
+  const handleSurahPress = useCallback(
+    (surah: SurahListItem) => {
+      router.push({
+        pathname: '/surah/[id]',
+        params: {
+          id: surah.number.toString(),
+          name: surah.englishName,
+        },
+      });
+    },
+    [router],
+  );
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
 
   const filteredSurahs = data?.data.filter((surah) => {
     const searchLower = searchQuery.toLowerCase();
@@ -38,6 +51,28 @@ export const SurahList: FC = () => {
       surah.number.toString().includes(searchQuery)
     );
   });
+
+  const renderItem = useCallback(
+    ({ item }: { item: SurahListItem }) => (
+      <TouchableOpacity
+        style={[styles.surahItem, { backgroundColor: colors.card }]}
+        onPress={() => handleSurahPress(item)}>
+        <View style={[styles.surahNumber, { backgroundColor: colors.verseNumber }]}>
+          <Text style={[styles.numberText, { color: colors.verseNumberText }]}>{item.number}</Text>
+        </View>
+        <View style={styles.surahInfo}>
+          <Text style={[styles.surahName, { color: colors.textPrimary }]}>{item.englishName}</Text>
+          <Text style={[styles.surahTranslation, { color: colors.textSecondary }]}>
+            {item.englishNameTranslation}
+          </Text>
+          <Text style={[styles.verseCount, { color: colors.textTertiary }]}>
+            {item.numberOfAyahs} Verses • {item.revelationType}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ),
+    [handleSurahPress, colors],
+  );
 
   if (isLoading) {
     return (
@@ -83,29 +118,10 @@ export const SurahList: FC = () => {
       <FlatList
         data={filteredSurahs}
         keyExtractor={(item) => item.number.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.surahItem, { backgroundColor: colors.card }]}
-            onPress={() => handleSurahPress(item)}>
-            <View style={[styles.surahNumber, { backgroundColor: colors.verseNumber }]}>
-              <Text style={[styles.numberText, { color: colors.verseNumberText }]}>
-                {item.number}
-              </Text>
-            </View>
-            <View style={styles.surahInfo}>
-              <Text style={[styles.surahName, { color: colors.textPrimary }]}>
-                {item.englishName}
-              </Text>
-              <Text style={[styles.surahTranslation, { color: colors.textSecondary }]}>
-                {item.englishNameTranslation}
-              </Text>
-              <Text style={[styles.verseCount, { color: colors.textTertiary }]}>
-                {item.numberOfAyahs} Verses • {item.revelationType}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={renderItem}
         contentContainerStyle={styles.listContent}
+        onRefresh={handleRefresh}
+        refreshing={isRefreshing}
       />
     </View>
   );

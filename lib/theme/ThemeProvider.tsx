@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeContext } from './ThemeContext';
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleTheme = async () => {
+  const toggleTheme = useCallback(async () => {
     try {
       const newTheme = !isDark;
       setIsDark(newTheme);
@@ -41,13 +41,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error saving theme preference:', error);
     }
-  };
+  }, [isDark]);
 
-  const value = {
-    colors: isDark ? darkTheme : lightTheme,
-    isDark,
-    toggleTheme,
-  };
+  const colors = useMemo(() => (isDark ? darkTheme : lightTheme), [isDark]);
+
+  const value = useMemo(
+    () => ({
+      colors,
+      isDark,
+      toggleTheme,
+    }),
+    [colors, isDark, toggleTheme],
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
