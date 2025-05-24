@@ -1,4 +1,4 @@
-import React, { useState, FC, useCallback } from 'react';
+import React, { useState, FC, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -42,15 +42,19 @@ export const SurahList: FC = () => {
     }
   }, [refetch]);
 
-  const filteredSurahs = surahList?.filter((surah) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      surah.name.toLowerCase().includes(searchLower) ||
-      surah.englishName.toLowerCase().includes(searchLower) ||
-      surah.englishNameTranslation.toLowerCase().includes(searchLower) ||
-      surah.number.toString().includes(searchQuery)
-    );
-  });
+  const filteredSurahs = useMemo(
+    () =>
+      surahList?.filter((surah) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          surah.name.toLowerCase().includes(searchLower) ||
+          surah.englishName.toLowerCase().includes(searchLower) ||
+          surah.englishNameTranslation.toLowerCase().includes(searchLower) ||
+          surah.number.toString().includes(searchQuery)
+        );
+      }),
+    [searchQuery, surahList],
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: SurahListItem }) => (
