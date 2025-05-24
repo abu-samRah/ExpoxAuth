@@ -7,7 +7,7 @@ import { Verse } from './Verse';
 
 type SurahContentProps = {
   colors: ReturnType<typeof useThemeColors>;
-  data: {
+  surah: {
     name: string;
     englishName: string;
     englishNameTranslation: string;
@@ -17,8 +17,8 @@ type SurahContentProps = {
   };
 };
 
-export const SurahContent: React.FC<SurahContentProps> = ({ colors, data }) => {
-  const { name, englishName, englishNameTranslation, numberOfAyahs, revelationType, ayahs } = data;
+export const SurahContent: React.FC<SurahContentProps> = ({ colors, surah }) => {
+  const { name, englishName, englishNameTranslation, numberOfAyahs, revelationType, ayahs } = surah;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

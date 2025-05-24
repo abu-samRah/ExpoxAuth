@@ -15,11 +15,11 @@ class ValidationError extends Error {
 }
 
 export function useSurahList() {
-  return useQuery<SurahListResponse, Error>({
+  return useQuery<SurahListResponse['data'], Error>({
     queryKey: ['surahList'],
     queryFn: async () => {
       try {
-        return await fetchSurahList();
+        return (await fetchSurahList()).data;
       } catch (error) {
         if (error instanceof ZodError) {
           throw new ValidationError('Invalid Surah list response', error);
@@ -32,11 +32,11 @@ export function useSurahList() {
 }
 
 export function useSurah(surahNumber: number, edition: string = 'quran-uthmani') {
-  return useQuery<SurahResponse, Error>({
+  return useQuery<SurahResponse['data'], Error>({
     queryKey: ['surah', surahNumber, edition],
     queryFn: async () => {
       try {
-        return await fetchSurah(surahNumber, edition);
+        return (await fetchSurah(surahNumber, edition)).data;
       } catch (error) {
         if (error instanceof ZodError) {
           throw new ValidationError(`Invalid Surah ${surahNumber} response`, error);

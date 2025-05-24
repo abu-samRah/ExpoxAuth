@@ -13,7 +13,7 @@ export default function SurahPage() {
   const surahNumber = parseInt(id, 10);
   const colors = useThemeColors();
 
-  const { data, isLoading, error } = useSurah(surahNumber);
+  const { data: surah, isLoading, error } = useSurah(surahNumber);
 
   const handleGoBack = () => router.back();
 
@@ -32,11 +32,11 @@ export default function SurahPage() {
       );
     }
 
-    if (!data?.data) {
+    if (!surah) {
       return <ErrorState colors={colors} message="Surah not found" onRetry={handleGoBack} />;
     }
 
-    return <SurahContent colors={colors} data={data.data} />;
+    return <SurahContent colors={colors} surah={surah} />;
   };
 
   return (

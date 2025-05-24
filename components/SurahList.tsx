@@ -16,7 +16,7 @@ import { useThemeColors } from '../lib/theme/useTheme';
 export const SurahList: FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const { data, isLoading, error, refetch } = useSurahList();
+  const { data: surahList, isLoading, error, refetch } = useSurahList();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const colors = useThemeColors();
 
@@ -42,7 +42,7 @@ export const SurahList: FC = () => {
     }
   }, [refetch]);
 
-  const filteredSurahs = data?.data.filter((surah) => {
+  const filteredSurahs = surahList?.filter((surah) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       surah.name.toLowerCase().includes(searchLower) ||
@@ -92,7 +92,7 @@ export const SurahList: FC = () => {
     );
   }
 
-  if (!data?.data.length) {
+  if (!surahList?.length) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <Text style={[styles.errorText, { color: colors.errorText }]}>No Surahs found</Text>
